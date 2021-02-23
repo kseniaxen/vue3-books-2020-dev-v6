@@ -46,8 +46,10 @@ div
       //- el-collapse-item(name='3')
       el-button(icon='el-icon-check' type="success" plain @click='applyFilter') Применить
   el-row(type="flex" justify="center" align="middle")
-    el-col(:span="24")
+     el-col(:lg="4" :xs="12")
       h1 Поиск книг
+     el-col(:lg="20" :xs="12")
+      span ({{books.length}} / {{booksTotalCount}})
   el-row#search-row(type='flex' justify='center' align='middle' :gutter="15")
     el-col(:lg="22" :sm="22" :xs="24" id="step_1" ref='searchInputRef')
       el-input(suffix-icon="search" placeholder='Поиск по названию / автору' v-model='state.filter.search' @input='onSearchInputChange')
@@ -98,6 +100,8 @@ div
               el-button(color='rgb(230,230,230)' color-text='rgb(50,50,50)' icon='el-icon-info' @click='showBookDetails(book.id)')
               el-button(circle icon='el-icon-question')
               el-button(circle icon='el-icon-share')
+    el-row(v-if='books.length < booksTotalCount' type='flex' justify='center' align='middle')
+      el-button(@click='loadMoreBooks') More...
 </template>
 <script>
 import { computed, reactive, /* onBeforeUnmount,  watch,*/ onMounted, onUnmounted, ref } from 'vue'
@@ -130,7 +134,7 @@ export default {
       cityOptionsKey: 'name',
       clearCountriesHandler: false,
       clearCitiesHandler: false,
-      isInfiniteLoadingCompleted: false,
+      //isInfiniteLoadingCompleted: false,
       filterBarActive: false,
       // идентификатор книги, выбранной для просмотра детализации,
       // для запроса на получение или для шаринга в соцсетях
@@ -149,6 +153,7 @@ export default {
     })
     // источник данных о книгах
     const books = computed(() => store.getters.books)
+    const booksTotalCount = computed(() => store.getters.totalCount)
     const suggestedCountries = computed(() => store.getters.countries)
     const suggestedCities = computed(() => store.getters.cities)
     const tourIsVisible = computed(() => state.tourData.index >= 0 && state.tourData.index < state.tourData.steps.length)
@@ -194,7 +199,7 @@ export default {
           } else {
             // иначе считаем, что список книг закончился,
             // и устанавливаем флаг завершения попыток получения новых книг
-            state.isInfiniteLoadingCompleted = true
+            //state.isInfiniteLoadingCompleted = true
           }
           // state.isBooksListChanged = false
         })
@@ -205,7 +210,7 @@ export default {
     // обработчик прокрутки страницы до низа
     const handleScroll = () => {
       if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight
-          && !state.isInfiniteLoadingCompleted
+          //&& !state.isInfiniteLoadingCompleted
           && !store.getters.loading) {
 				loadMoreBooks()
 			}
@@ -216,6 +221,7 @@ export default {
       store.dispatch('loadTypes')
       // первый вызов метода получения порции моделей книг
       loadMoreBooks()
+      store.dispatch('loadTotalCount')
       // установка обработчика события прокрутки
       window.addEventListener("scroll", handleScroll)
       const searchInputPosition = searchInputRef.value.$el.getBoundingClientRect()
@@ -378,10 +384,10 @@ export default {
     }
     return {
       state, // state
-      books, suggestedCountries, suggestedCities, typeOptions, tourIsVisible, // computed
+      books, suggestedCountries, suggestedCities, typeOptions, tourIsVisible, booksTotalCount, // computed
       /* booksInfiniteHandler, */ onSearchInputChange, countryItemSelected, countryInputChange,
       cityItemSelected, cityInputChange,
-      applyFilter, showBookDetails, acceptAlert, tourUpdate,
+      applyFilter, showBookDetails, acceptAlert, tourUpdate, loadMoreBooks,
       onBookClicked, bookDitailsDialogClosedHandler, // methods
       searchInputRef, filterButtonRef // refs
     }

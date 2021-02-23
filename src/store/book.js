@@ -11,6 +11,9 @@ export default ({
     myBooks: [],
     // идентификатор самого последнего скачанного описания книги
     oldestBookId: null,
+    //все книги
+    totalCount: 0,
+
     // идентификатор самого последнего скачанного описания собственной книги
     oldestMyBookId: null,
     myTotalCount: 0
@@ -171,6 +174,7 @@ export default ({
               ...response.data
             })
             dispatch('loadMyTotalCount')
+            dispatch('loadTotalCount')
           } else {
             commit('setError', response.message)
           }
@@ -516,6 +520,36 @@ export default ({
         commit('setError', error.message)
         throw error
       }
+    },
+
+    async loadTotalCount ({commit, getters}) {
+      commit('clearError')
+      commit('setLoading', true)
+      try {
+        const url = getters.baseRestApiUrl + `?controller=book&action=getTotalCount`
+        const requestData = {
+          method: 'GET',
+          mode: 'cors'
+        }
+        const request = new Request(url, requestData)
+        return await fetch(request).then(function (response) {
+          return response.json()
+        }).then(function (response) {
+          if (response.data) {
+            commit('loadTotalCount', {target: 'totalCount', count: response.data.totalCount})
+          } else {
+            commit('setError', response.message)
+          }
+        }).catch(function (e) {
+          console.log(e)
+        }).finally(function () {
+          commit('setLoading', false)
+        })
+      } catch (error) {
+        commit('setLoading', false)
+        commit('setError', error.message)
+        throw error
+      }
     }
 
   },
@@ -534,6 +568,9 @@ export default ({
     },
     myTotalCount (state) {
       return state.myTotalCount
+    },
+    totalCount (state) {
+      return state.totalCount
     }
   }
 })
